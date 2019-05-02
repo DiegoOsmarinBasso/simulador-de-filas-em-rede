@@ -28,6 +28,12 @@ public class Simulator {
 			/**
 			 * INITIALIZATIONS
 			 */
+			// Zero the queues currentSize e clientLoss
+			for (Queue q : queues) {
+				q.zeroCurrentSize();
+				q.zeroClientLoss();
+			}
+
 			// set new seed every new execution, use clock as seed if SEEDS not informed
 			if (SEEDS.isEmpty()) {
 				LinearCongruentialGenerator.setNewSeed();
@@ -67,9 +73,9 @@ public class Simulator {
 			 */
 			for (int randsUsed = 0; randsUsed < RANDS_NUM;) {
 
-				// Get the next event its queue and time array
+				// Get the next event, its queue and time array
 				Event nextEvent = getNextEvent(events);
-				Queue eventQueue = nextEvent.getQueue();
+				Queue eventQueue = nextEvent.getOriginQueue();
 				double[] queueTimeArray = times.get(eventQueue.getPositionInArray());
 
 				// Accounting the time since last event
@@ -78,6 +84,7 @@ public class Simulator {
 					times.get(i)[queues.get(i).getCurrentSize()] += timeElapsed;
 					times.get(i)[queues.get(i).getCapacity() + 1] = nextEvent.getTime();
 				}
+				lastEvent = nextEvent.getTime();
 
 				// New arrival
 				if (nextEvent.getType() == EventType.ARRIVAL) {
@@ -90,18 +97,18 @@ public class Simulator {
 						if (eventQueue.getCurrentSize() <= eventQueue.getServers()) {
 
 							String destiny = eventQueue.getDestiny(LinearCongruentialGenerator.nextRand());
-							randsUsed++;
 							double time = queueTimeArray[eventQueue.getCapacity() + 1] + LinearCongruentialGenerator
 									.nextRand(eventQueue.getMinOut(), eventQueue.getMaxOut());
-							randsUsed++;
+							randsUsed += 2;
 
 							// If null, schedule the client to leave the system
 							if (destiny == null) {
-								events.add(new Event(EventType.DEPARTURE, time));
+								events.add(new Event(EventType.DEPARTURE, time, eventQueue));
 							}
 							// Else schedule the client to pass from one queue to another
 							else {
-								events.add(new Event(EventType.PASSAGE, time, getQueueByName(queues, destiny)));
+								events.add(new Event(EventType.PASSAGE, time, eventQueue,
+										getQueueByName(queues, destiny)));
 							}
 						}
 					}
@@ -116,33 +123,63 @@ public class Simulator {
 					randsUsed++;
 				}
 				// New departure
-				else if (nextEvent.getType() == EventType.DEPARTURE) {
-					// Accounting the departure
+				else {
+					// Accounting the eventQueue departure
 					eventQueue.decreaseCurrentSize();
 
 					// If still has queue, compute service time
 					if (eventQueue.getCurrentSize() >= eventQueue.getServers()) {
 
 						String destiny = eventQueue.getDestiny(LinearCongruentialGenerator.nextRand());
-						randsUsed++;
 						double time = queueTimeArray[eventQueue.getCapacity() + 1]
 								+ LinearCongruentialGenerator.nextRand(eventQueue.getMinOut(), eventQueue.getMaxOut());
-						randsUsed++;
+						randsUsed += 2;
 
 						// If null, schedule the client to leave the system
 						if (destiny == null) {
-							events.add(new Event(EventType.DEPARTURE, time));
+							events.add(new Event(EventType.DEPARTURE, time, eventQueue));
 						}
 						// Else schedule the client to pass from one queue to another
 						else {
-							events.add(new Event(EventType.PASSAGE, time, getQueueByName(queues, destiny)));
+							events.add(new Event(EventType.PASSAGE, time, eventQueue, getQueueByName(queues, destiny)));
+						}
+					}
+					// Accounting passage from one queue to another
+					if (nextEvent.getType() == EventType.PASSAGE) {
+
+						Queue receivingQueue = nextEvent.getDestinyQueue();
+
+						if (receivingQueue.getCurrentSize() < receivingQueue.getCapacity()) {
+							receivingQueue.increaseCurrentSize();
+
+							// If there are idle servers in the receiving queue, compute service time
+							if (receivingQueue.getCurrentSize() <= receivingQueue.getServers()) {
+
+								double[] receivingQueueTimeArray = times.get(receivingQueue.getPositionInArray());
+								String destiny = receivingQueue.getDestiny(LinearCongruentialGenerator.nextRand());
+								double time = receivingQueueTimeArray[receivingQueue.getCapacity() + 1]
+										+ LinearCongruentialGenerator.nextRand(receivingQueue.getMinOut(),
+												receivingQueue.getMaxOut());
+								randsUsed += 2;
+
+								// If null, schedule the client to leave the system
+								if (destiny == null) {
+									events.add(new Event(EventType.DEPARTURE, time, receivingQueue));
+								}
+								// Else schedule the client to pass from one queue to another
+								else {
+									events.add(new Event(EventType.PASSAGE, time, receivingQueue,
+											getQueueByName(queues, destiny)));
+								}
+							}
+						}
+						// Else account loss
+						else {
+							receivingQueue.increaseClientLoss();
 						}
 					}
 				}
-				// Passage from one queue to another
-				else {
-					// TODO:
-				}
+
 			}
 
 			/**
@@ -172,12 +209,24 @@ public class Simulator {
 
 			// Show outputs
 			Queue queue = queues.get(i);
+			System.out.println("\n\n*******************************************************");
+			System.out.println(
+					"Fila " + queue.getName() + " (G/G/" + queue.getServers() + "/" + queue.getCapacity() + ")");
+			if (queue.getMinIn() > 0.0)
+				System.out.printf("Chegadas %3.1f ... %3.1f\n", queue.getMinIn(), queue.getMaxIn());
+			System.out.printf("Servicos %3.1f ... %3.1f\n", queue.getMinOut(), queue.getMaxOut());
+			System.out.println("*******************************************************");
 			for (int k = 0; k <= queue.getCapacity(); k++) {
-				System.out.printf("\nMedia de tempo para fila tamanho %d: %12.4f", k, executionMean[k]);
+				System.out.printf("Media de tempo para fila tamanho %d: %12.4f\n", k, executionMean[k]);
+				if (executionMean[k] == 0.0)
+					break;
 			}
-			System.out.printf("\n\nMedia de tempo total de excucao: %.4f", executionMean[executionMean.length - 2]);
 			System.out.printf("\nMedia de clientes perdidos: %.4f\n", executionMean[executionMean.length - 1]);
 		}
+		System.out.println("\n\n*******************************************************");
+		System.out.printf("Media de tempo total de excucao: %.4f\n",
+				executionsMeans.get(0)[executionsMeans.get(0).length - 2]);
+		System.out.println("*******************************************************");
 	}
 
 	private static Queue getQueueByName(ArrayList<Queue> queues, String destiny) {

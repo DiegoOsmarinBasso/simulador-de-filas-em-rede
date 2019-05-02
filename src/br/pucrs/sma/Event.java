@@ -4,16 +4,18 @@ public class Event {
 
 	private EventType type;
 	private double time;
-	private Queue queue;
+	private Queue originQueue;
+	private Queue destinyQueue;
 
-	public Event(EventType type, double time) {
+	public Event(EventType type, double time, Queue originQueue) {
 		this.type = type;
 		this.time = time;
+		this.originQueue = originQueue;
 	}
 
-	public Event(EventType type, double time, Queue queue) {
-		this(type, time);
-		this.queue = queue;
+	public Event(EventType type, double time, Queue originQueue, Queue destinyQueue) {
+		this(type, time, originQueue);
+		this.destinyQueue = destinyQueue;
 	}
 
 	public EventType getType() {
@@ -32,12 +34,18 @@ public class Event {
 		this.time = time;
 	}
 
-	public Queue getQueue() {
-		return queue;
+	public Queue getOriginQueue() {
+		return originQueue;
 	}
 
-	public void setQueue(Queue queue) {
-		this.queue = queue;
+	public Queue getDestinyQueue() {
+		return destinyQueue;
+	}
+
+	@Override
+	public String toString() {
+		return "Event [type=" + type + ", time=" + time + ", originQueue=" + originQueue + ", destinyQueue="
+				+ destinyQueue + "]";
 	}
 
 }

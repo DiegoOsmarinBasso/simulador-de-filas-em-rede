@@ -105,12 +105,20 @@ public class Queue {
 		currentSize--;
 	}
 
+	public void zeroCurrentSize() {
+		currentSize = 0;
+	}
+
 	public int getClientLoss() {
 		return clientLoss;
 	}
 
 	public void increaseClientLoss() {
 		clientLoss++;
+	}
+
+	public void zeroClientLoss() {
+		clientLoss = 0;
 	}
 
 	public boolean addDestiny(String queue, double probability) {
@@ -129,7 +137,7 @@ public class Queue {
 
 		for (int i = 0; i < probabilities.size(); i++) {
 			probabilityCheck += probabilities.get(i);
-			if (rand < probabilityCheck) {
+			if (rand <= probabilityCheck) {
 				queue = queues.get(i);
 				break;
 			}
@@ -143,7 +151,8 @@ public class Queue {
 		return "Queue [name=" + name + ", firstArrival=" + firstArrival + ", servers=" + servers + ", capacity="
 				+ capacity + ", minIn=" + minIn + ", maxIn=" + maxIn + ", minOut=" + minOut + ", maxOut=" + maxOut
 				+ ", queues=" + queues + ", probabilities=" + probabilities + ", sumProbabilities=" + sumProbabilities
-				+ ", positionInArray=" + positionInArray + "]";
+				+ ", positionInArray=" + positionInArray + ", currentSize=" + currentSize + ", clientLoss=" + clientLoss
+				+ "]";
 	}
 
 }
