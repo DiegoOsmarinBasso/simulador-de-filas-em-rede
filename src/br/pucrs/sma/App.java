@@ -37,7 +37,7 @@ public class App {
 				// QUEUES
 				else if (line.startsWith("QUEUES")) {
 					int positionInArray = 0;
-					while (true) {
+					while (reader.ready()) {
 						String[] values = reader.readLine().split(" ");
 
 						// Linha em branco, passar para proxima entrada
@@ -80,7 +80,7 @@ public class App {
 						throw new IllegalArgumentException(
 								"As entradas FIRST_ARRIVAL devem vir depois das entradas QUEUES!");
 					}
-					while (true) {
+					while (reader.ready()) {
 						String[] values = reader.readLine().split(" ");
 
 						// Linha em branco, passar para proxima entrada
@@ -108,7 +108,7 @@ public class App {
 					if (queues.isEmpty()) {
 						throw new IllegalArgumentException("As entradas NETWORK devem vir depois das entradas QUEUES!");
 					}
-					while (true) {
+					while (reader.ready()) {
 						String[] values = reader.readLine().split(" ");
 
 						// Linha em branco, passar para proxima entrada
@@ -144,7 +144,7 @@ public class App {
 
 					Simulator.EXECUTIONS = 0;
 
-					while (true) {
+					while (reader.ready()) {
 						String[] values = reader.readLine().split(" ");
 
 						// Linha em branco, passar para proxima entrada
