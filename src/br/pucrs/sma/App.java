@@ -179,9 +179,9 @@ public class App {
 		}
 
 		// Conferindo dados
-		for (Queue q : queues) {
-			System.out.println(q);
-		}
+		//for (Queue q : queues) {
+		//	System.out.println(q);
+		//}
 
 		// RODAR SIMULACAOES
 		Simulator.run(queues);

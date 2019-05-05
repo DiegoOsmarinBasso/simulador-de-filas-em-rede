@@ -18,8 +18,8 @@ public class LinearCongruentialGenerator {
 		seed = informedSeed;
 	}
 
-	public static int getSeed() {
-		return (int) seed;
+	public static long getSeed() {
+		return seed;
 	}
 
 	// Update seed and generate new random
